@@ -1,70 +1,133 @@
-# Notification Service - fiap-soat-video-notifications
+# 📧 Video Processor - Notification Service
 
-Microservice responsible for sending email notifications.
+Microserviço responsável pelo envio de notificações por email quando jobs são completados ou falham.
 
-## Features
-
-- **Email Notifications**: Send job completion and failure emails
-- **Event Handling**: Listen to job events and trigger notifications
-- **Notification History**: Track all sent notifications
-
-## Architecture
+## 📐 Arquitetura
 
 ```
-src/notification_service/
-├── domain/            # Domain entities and exceptions
-├── application/       # Use cases and ports
-│   ├── ports/        # Input/Output interfaces
-│   └── use_cases/    # Business logic
-└── infrastructure/   # Adapters and config
-    ├── adapters/
-    │   ├── input/    # API routes
-    │   └── output/   # Email, Database, Cache
-    └── config/       # Settings
+fiap-soat-video-notifications/
+├── src/notification_service/
+│   ├── domain/entities/          # Notification entity
+│   ├── application/
+│   │   ├── ports/                # INotificationRepository, IEmailSender
+│   │   └── use_cases/            # SendNotification, HandleJobEvent
+│   └── infrastructure/
+│       ├── adapters/input/api/   # FastAPI routes
+│       ├── adapters/output/
+│       │   ├── persistence/      # PostgreSQL
+│       │   ├── email/            # SMTP sender
+│       │   └── cache/            # Redis
+│       └── config/               # Settings
+├── Dockerfile
+└── pyproject.toml
 ```
 
-## API Endpoints
+## 🚀 Rodar Localmente
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/health` | Health check |
-| GET | `/notifications` | List user notifications |
+### Pré-requisitos
 
-## Configuration
+- Python 3.11+
+- PostgreSQL rodando na porta 5434
+- Servidor SMTP (ou Gmail com App Password)
 
-Environment variables:
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `DATABASE_URL` | PostgreSQL connection | `postgresql+asyncpg://...` |
-| `REDIS_URL` | Redis connection | `redis://localhost:6379/3` |
-| `SMTP_HOST` | SMTP server host | `smtp.gmail.com` |
-| `SMTP_PORT` | SMTP server port | `587` |
-| `SMTP_USER` | SMTP username | - |
-| `SMTP_PASSWORD` | SMTP password | - |
-| `SMTP_FROM` | From address | `noreply@video-processor.com` |
-
-## Running Locally
+### 1. Clone e instale
 
 ```bash
-# Install dependencies
+git clone https://github.com/morgadope/fiap-soat-video-notifications.git
+cd fiap-soat-video-notifications
 pip install -e ".[dev]"
-
-# Run the service
-uvicorn notification_service.infrastructure.adapters.input.api.main:app --reload --port 8004
-
-# Run with Docker
-docker build -t notification-service .
-docker run -p 8004:8004 notification-service
 ```
 
-## Testing
+### 2. Configure variáveis de ambiente
+
+```bash
+export DATABASE_URL="postgresql+asyncpg://postgres:postgres@localhost:5434/notification_db"
+export REDIS_URL="redis://localhost:6379/3"
+export SMTP_HOST="smtp.gmail.com"
+export SMTP_PORT=587
+export SMTP_USER="your-email@gmail.com"
+export SMTP_PASSWORD="your-app-password"
+export SMTP_FROM="noreply@video-processor.com"
+```
+
+### 3. Execute
+
+```bash
+uvicorn notification_service.infrastructure.adapters.input.api.main:app --reload --port 8004
+```
+
+### 4. Acesse
+
+- Swagger: http://localhost:8004/docs
+- Health: http://localhost:8004/health
+
+## 📖 API Endpoints
+
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| GET | `/notifications` | Listar notificações do usuário |
+| GET | `/health` | Health check |
+
+### Exemplos
+
+**Listar notificações:**
+```bash
+curl "http://localhost:8004/notifications?user_id=UUID" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+## 📧 Templates de Email
+
+### Job Completado
+```
+Assunto: ✅ Video Processing Complete: video.mp4
+
+Olá!
+
+Seu vídeo "video.mp4" foi processado com sucesso!
+
+📊 Resultados:
+- Frames extraídos: 120
+- Status: COMPLETED
+
+📥 Download: https://...
+
+Atenciosamente,
+Video Processor Team
+```
+
+### Job Falhou
+```
+Assunto: ❌ Video Processing Failed: video.mp4
+
+Olá!
+
+Infelizmente houve um erro ao processar seu vídeo "video.mp4".
+
+❌ Erro: ...
+
+Por favor, tente novamente.
+
+Atenciosamente,
+Video Processor Team
+```
+
+## 🐳 Docker
+
+```bash
+docker build -t notification-service .
+docker run -p 8004:8004 \
+  -e DATABASE_URL=... \
+  -e SMTP_HOST=... \
+  notification-service
+```
+
+## 🧪 Testes
 
 ```bash
 pytest tests/ -v --cov=notification_service
 ```
 
-## Dependencies
+## 📄 Licença
 
-- **Internal**: `video-processor-shared` (shared library)
-- **External**: PostgreSQL, Redis, SMTP Server
+MIT License
