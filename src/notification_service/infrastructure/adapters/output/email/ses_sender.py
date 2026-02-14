@@ -54,6 +54,10 @@ class SESEmailSender(IEmailSender):
         except Exception as e:
             print(f"Failed to send email: {e}")
             return False
+
+    async def send_email(self, to: str, subject: str, body: str) -> None:
+        """Send a plain-text email via SES (interface compatibility)."""
+        await self.send(to=to, subject=subject, body=body)
     
     async def send_job_completed(
         self,

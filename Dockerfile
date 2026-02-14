@@ -24,6 +24,7 @@ RUN pip install --no-cache-dir \
     "asyncpg>=0.29.0" \
     "psycopg2-binary>=2.9.0" \
     "redis>=5.0.0" \
+    "aioboto3>=12.0.0" \
     "aiosmtplib>=3.0.0" \
     "jinja2>=3.1.0" \
     "httpx>=0.26.0"
