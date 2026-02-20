@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock
 from uuid import uuid4
 
@@ -65,8 +65,8 @@ def test_list_notifications_with_dependency_override() -> None:
         recipient="user@example.com",
         subject="Subject",
         body="Body",
-        sent_at=datetime.utcnow(),
-        created_at=datetime.utcnow(),
+        sent_at=datetime.now(UTC),
+        created_at=datetime.now(UTC),
     )
 
     stub = StubNotificationRepository([notification])

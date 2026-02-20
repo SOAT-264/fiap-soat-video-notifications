@@ -1,6 +1,6 @@
 """Application Settings."""
 from functools import lru_cache
-from pydantic_settings import BaseSettings
+from pydantic_settings import SettingsConfigDict, BaseSettings
 
 
 class Settings(BaseSettings):
@@ -21,9 +21,7 @@ class Settings(BaseSettings):
 
     AUTH_SERVICE_URL: str = "http://localhost:8001"
     JOB_SERVICE_URL: str = "http://localhost:8003"
-
-    class Config:
-        env_file = ".env"
+    model_config = SettingsConfigDict(env_file=".env")
 
 
 @lru_cache()

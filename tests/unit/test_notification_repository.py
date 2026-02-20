@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
@@ -21,7 +21,7 @@ def build_notification() -> Notification:
         recipient="user@example.com",
         subject="subject",
         body="body",
-        created_at=datetime.utcnow(),
+        created_at=datetime.now(UTC),
     )
 
 
@@ -65,8 +65,8 @@ async def test_find_by_id_returns_entity_when_found() -> None:
         subject="subject",
         body="body",
         error_message=None,
-        sent_at=datetime.utcnow(),
-        created_at=datetime.utcnow(),
+        sent_at=datetime.now(UTC),
+        created_at=datetime.now(UTC),
     )
     execute_result = MagicMock()
     execute_result.scalar_one_or_none.return_value = model
@@ -94,7 +94,7 @@ async def test_find_by_user_id_maps_models_to_entities() -> None:
         body="body",
         error_message=None,
         sent_at=None,
-        created_at=datetime.utcnow(),
+        created_at=datetime.now(UTC),
     )
     scalars_result = MagicMock()
     scalars_result.all.return_value = [model]

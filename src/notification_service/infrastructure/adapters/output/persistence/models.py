@@ -1,6 +1,6 @@
 """SQLAlchemy models for notifications."""
-from datetime import datetime
-from uuid import UUID as PyUUID
+from datetime import UTC, datetime
+from uuid import UUID
 
 from sqlalchemy import Column, String, DateTime, Text, Enum
 from sqlalchemy.dialects.postgresql import UUID
@@ -33,4 +33,4 @@ class NotificationModel(Base):
     body = Column(Text, nullable=True)
     error_message = Column(Text, nullable=True)
     sent_at = Column(DateTime, nullable=True)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow, index=True)
+    created_at = Column(DateTime, nullable=False, default=datetime.now(UTC), index=True)
