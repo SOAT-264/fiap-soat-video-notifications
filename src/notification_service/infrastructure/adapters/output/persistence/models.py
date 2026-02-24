@@ -32,5 +32,10 @@ class NotificationModel(Base):
     subject = Column(String(255), nullable=True)
     body = Column(Text, nullable=True)
     error_message = Column(Text, nullable=True)
-    sent_at = Column(DateTime, nullable=True)
-    created_at = Column(DateTime, nullable=False, default=datetime.now(UTC), index=True)
+    sent_at = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(UTC),
+        index=True,
+    )
