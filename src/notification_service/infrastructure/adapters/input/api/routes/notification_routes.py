@@ -4,7 +4,7 @@ from typing import List, Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
-from pydantic import BaseModel
+from pydantic import ConfigDict, BaseModel
 
 from notification_service.infrastructure.adapters.output.persistence import (
     get_session,
@@ -18,16 +18,14 @@ router = APIRouter(prefix="/notifications", tags=["notifications"])
 class NotificationResponse(BaseModel):
     id: UUID
     user_id: UUID
-    job_id: Optional[UUID]
+    job_id: Optional[UUID] = None
     type: str
     status: str
     recipient: str
-    subject: Optional[str]
-    sent_at: Optional[datetime]
+    subject: Optional[str] = None
+    sent_at: Optional[datetime] = None
     created_at: datetime
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 def get_notification_repository(

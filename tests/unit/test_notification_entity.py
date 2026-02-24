@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 from uuid import uuid4
 
 from notification_service.domain.entities import Notification, NotificationStatus, NotificationType
@@ -37,7 +37,7 @@ def test_mark_failed_updates_status_and_error_message() -> None:
 
 def test_notification_equality_and_hash_by_id() -> None:
     notification_id = uuid4()
-    created_at = datetime.utcnow()
+    created_at = datetime.now(UTC)
     first = Notification(
         id=notification_id,
         user_id=uuid4(),

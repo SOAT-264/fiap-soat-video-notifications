@@ -1,5 +1,5 @@
 """Notification Entity."""
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Optional
 from uuid import UUID
@@ -46,12 +46,12 @@ class Notification:
         self.body = body
         self.error_message = error_message
         self.sent_at = sent_at
-        self.created_at = created_at or datetime.utcnow()
+        self.created_at = created_at or datetime.now(UTC)
 
     def mark_sent(self) -> None:
         """Mark notification as sent."""
         self.status = NotificationStatus.SENT
-        self.sent_at = datetime.utcnow()
+        self.sent_at = datetime.now(UTC)
 
     def mark_failed(self, error_message: str) -> None:
         """Mark notification as failed."""
