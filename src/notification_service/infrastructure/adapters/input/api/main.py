@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from prometheus_client import make_asgi_app
 
 from notification_service.infrastructure.config import get_settings
 from notification_service.infrastructure.adapters.input.api.routes import health_router, notification_router
@@ -35,6 +36,7 @@ app.add_middleware(
 
 app.include_router(health_router)
 app.include_router(notification_router)
+app.mount("/metrics", make_asgi_app())
 
 
 @app.get("/")
