@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notification-api-service
+  namespace: video-processor
+  labels:
+    app: notification-api-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notification-api-service
+  template:
+    metadata:
+      labels:
+        app: notification-api-service
+    spec:
+      containers:
+        - name: notification-api-service
+          image: fiap-soat-video-notifications:local
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8000
+              name: http
+          envFrom:
+            - configMapRef:
+                name: notifications-app-config
+            - secretRef:
+                name: notifications-app-secret
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"

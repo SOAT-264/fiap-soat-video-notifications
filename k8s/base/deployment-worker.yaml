@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notification-worker
+  namespace: video-processor
+  labels:
+    app: notification-worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notification-worker
+  template:
+    metadata:
+      labels:
+        app: notification-worker
+    spec:
+      containers:
+        - name: notification-worker
+          image: fiap-soat-video-notifications:local
+          imagePullPolicy: Never
+          command:
+            - python
+            - -m
+            - notification_service.infrastructure.adapters.input.sqs_consumer
+          envFrom:
+            - configMapRef:
+                name: notifications-app-config
+            - secretRef:
+                name: notifications-app-secret
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "256Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"

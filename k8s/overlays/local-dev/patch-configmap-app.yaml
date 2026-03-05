@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: notifications-app-config
+  namespace: video-processor
+data:
+  DATABASE_URL: "postgresql+asyncpg://postgres:postgres123@host.docker.internal:5435/notification_db"
+  REDIS_URL: "redis://host.docker.internal:6379/3"
+  AWS_ENDPOINT_URL: "http://host.docker.internal:4566"
+  SQS_QUEUE_URL: "http://host.docker.internal:4566/000000000000/notification-queue"
+  SQS_NOTIFICATION_QUEUE_URL: "http://host.docker.internal:4566/000000000000/notification-queue"
+  AUTH_SERVICE_URL: "http://host.docker.internal:8001"
+  JOB_SERVICE_URL: "http://host.docker.internal:8003"
