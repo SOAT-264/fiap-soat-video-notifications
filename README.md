@@ -7,9 +7,17 @@ Microserviço de notificações do ecossistema FIAP SOAT Video Processor. Ele di
 - Explicação do projeto
 - Objetivo
 - Como funciona
+- Repositórios relacionados
 - Integrações com outros repositórios
 - Como executar
 - Como testar
+
+## Repositórios relacionados
+- [fiap-soat-video-auth](https://github.com/SOAT-264/fiap-soat-video-auth)
+- [fiap-soat-video-jobs](https://github.com/SOAT-264/fiap-soat-video-jobs)
+- [fiap-soat-video-shared](https://github.com/SOAT-264/fiap-soat-video-shared)
+- [fiap-soat-video-local-dev](https://github.com/SOAT-264/fiap-soat-video-local-dev)
+- [fiap-soat-video-obs](https://github.com/SOAT-264/fiap-soat-video-obs)
 
 ## Explicação do projeto
 O serviço possui duas frentes:
