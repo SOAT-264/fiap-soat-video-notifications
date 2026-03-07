@@ -1,183 +1,87 @@
-# 📧 Video Processor - Notification Service
+# fiap-soat-video-notifications
 
-[![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-green.svg)](https://fastapi.tiangolo.com/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+## Introdução
+Microserviço de notificações do ecossistema FIAP SOAT Video Processor. Ele disponibiliza API para consulta de notificações e worker para consumir eventos de job e enviar e-mails.
 
-> Microserviço responsável pelo envio de notificações por email quando jobs são completados ou falham.
+## Sumário
+- Explicação do projeto
+- Objetivo
+- Como funciona
+- Integrações com outros repositórios
+- Como executar
+- Como testar
 
-## 📋 Índice
+## Explicação do projeto
+O serviço possui duas frentes:
+- API FastAPI para listagem de notificações por usuário.
+- Worker SQS para consumo de eventos de processamento e envio de e-mail via SES.
 
-- [Arquitetura](#-arquitetura)
-- [Templates de Email](#-templates-de-email)
-- [API Endpoints](#-api-endpoints)
-- [Como Executar](#-como-executar)
-- [AWS Lambda](#-aws-lambda)
-- [Testes](#-testes)
+As notificações são persistidas no banco para rastreabilidade e auditoria do fluxo.
 
----
+## Objetivo
+Garantir comunicação com o usuário ao longo do processamento de vídeos, principalmente em eventos de conclusão e falha.
 
-## 🏗️ Arquitetura
+## Como funciona
+1. O worker consome mensagens da fila `notification-queue` (SQS), incluindo payloads encapsulados por SNS.
+2. Para cada evento, ele identifica o tipo (`job_completed`, `job_failed`) e monta assunto/corpo da notificação.
+3. Quando necessário, consulta o auth em `GET /auth/users/{user_id}` para obter e-mail do usuário.
+4. Envia e-mail via SES e atualiza status da notificação no banco.
+5. A API expõe `GET /notifications` para consulta histórica, além de `GET /health` e `GET /metrics`.
 
-```
-src/notification_service/
-├── domain/
-│   └── entities/notification.py  # Entidade Notification
-├── application/
-│   ├── ports/output/             # IEmailSender
-│   └── use_cases/                # SendNotification
-└── infrastructure/
-    ├── adapters/
-    │   ├── input/
-    │   │   ├── api/              # FastAPI routes
-    │   │   └── sqs_consumer.py   # Lambda handler
-    │   └── output/
-    │       ├── persistence/      # SQLAlchemy
-    │       └── email/            # SES sender
-    └── config/
-```
+## Integrações com outros repositórios
+| Repositório integrado | Como integra | Para que serve |
+| --- | --- | --- |
+| `fiap-soat-video-jobs` | Consome eventos de job (pipeline `job-events -> notification-queue`) | Disparar comunicação ao usuário após processamento |
+| `fiap-soat-video-auth` | Chamada HTTP para `GET /auth/users/{user_id}` | Resolver e-mail do usuário de forma confiável |
+| `fiap-soat-video-service` | Integração indireta via fluxo de jobs iniciado por upload | Fechar ciclo completo de notificação do processamento |
+| `fiap-soat-video-shared` | Dependência compartilhada do ecossistema para contratos comuns | Manter consistência de tipos e contratos entre repositórios |
+| `fiap-soat-video-local-dev` | Provisiona DB/Redis/LocalStack, deploy API+worker e filas SNS/SQS | Executar notificações no ambiente principal de desenvolvimento |
+| `fiap-soat-video-obs` | Exposição de `/health` e `/metrics` para scraping | Monitorar disponibilidade e comportamento operacional |
 
----
-
-## 📧 Templates de Email
-
-### Job Completado ✅
-
-```
-Assunto: ✅ Video Processing Complete: video.mp4
-
-Olá!
-
-Seu vídeo "video.mp4" foi processado com sucesso!
-
-📊 Resultados:
-- Frames extraídos: 120
-- Status: COMPLETED
-
-📥 Download: [link]
-
-Atenciosamente,
-Video Processor Team
-```
-
-### Job Falhou ❌
-
-```
-Assunto: ❌ Video Processing Failed: video.mp4
-
-Olá!
-
-Infelizmente houve um erro ao processar seu vídeo "video.mp4".
-
-❌ Erro: [mensagem de erro]
-
-Por favor, tente novamente.
-
-Atenciosamente,
-Video Processor Team
-```
-
----
-
-## 📡 API Endpoints
-
-| Método | Endpoint | Descrição | Autenticação |
-|--------|----------|-----------|--------------|
-| GET | `/notifications` | Listar notificações | ✅ JWT |
-| GET | `/health` | Health check | ❌ |
-
----
-
-## 🚀 Como Executar
-
+## Como executar
 ### Pré-requisitos
-
 - Python 3.11+
-- PostgreSQL
-- AWS SES (ou LocalStack)
+- Infra local recomendada via `fiap-soat-video-local-dev`
 
-### 1. Clone e instale
-
-```bash
-git clone https://github.com/morgadope/fiap-soat-video-notifications.git
-cd fiap-soat-video-notifications
+### Execução local da API
+```powershell
+cd /fiap-soat-video-notifications
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
 pip install -e ".[dev]"
+
+$env:DATABASE_URL="postgresql+asyncpg://postgres:postgres123@localhost:5435/notification_db"
+$env:REDIS_URL="redis://localhost:6379/3"
+$env:AWS_ENDPOINT_URL="http://localhost:4566"
+$env:AWS_ACCESS_KEY_ID="test"
+$env:AWS_SECRET_ACCESS_KEY="test"
+$env:AWS_DEFAULT_REGION="us-east-1"
+$env:SQS_NOTIFICATION_QUEUE_URL="http://localhost:4566/000000000000/notification-queue"
+$env:AUTH_SERVICE_URL="http://localhost:8001"
+$env:SES_FROM_EMAIL="noreply@videoprocessor.local"
+
+uvicorn notification_service.infrastructure.adapters.input.api.main:app --host 0.0.0.0 --port 8004 --reload
 ```
 
-### 2. Configure
-
-```bash
-export DATABASE_URL="postgresql+asyncpg://postgres:postgres@localhost:5435/notification_db"
-export AWS_ENDPOINT_URL="http://localhost:4566"
-export SES_FROM_EMAIL="noreply@videoprocessor.local"
-export SQS_NOTIFICATION_QUEUE_URL="http://localhost:4566/000000000000/notification-queue"
-```
-
-### 3. Execute API
-
-```bash
-uvicorn notification_service.infrastructure.adapters.input.api.main:app --reload --port 8004
-```
-
-### 4. Execute Consumer (outro terminal)
-
-```bash
+### Execução local do worker
+```powershell
+cd /fiap-soat-video-notifications
+.\.venv\Scripts\Activate.ps1
 python -m notification_service.infrastructure.adapters.input.sqs_consumer
 ```
 
----
-
-## ☁️ AWS Lambda
-
-O serviço pode rodar como Lambda triggered por SQS (subscribed to SNS):
-
-```python
-# sqs_consumer.py
-def lambda_handler(event, context):
-    for record in event["Records"]:
-        body = json.loads(record["body"])
-        await send_notification(body)
+### Execução integrada (recomendada)
+```powershell
+cd /fiap-soat-video-local-dev
+.\start.ps1
 ```
 
-### Fluxo SNS → SQS → Lambda
-
-```
-Job Service → SNS (job-events) → SQS (notification-queue) → Lambda → SES
-```
-
----
-
-## 🐳 Docker
-
-```bash
-docker build -t notification-service .
-docker run -p 8004:8004 \
-  -e DATABASE_URL="..." \
-  -e AWS_ENDPOINT_URL="..." \
-  notification-service
+## Como testar
+```powershell
+cd /fiap-soat-video-notifications
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -e ".[dev]"
+pytest
 ```
 
----
-
-## ⚙️ Variáveis de Ambiente
-
-| Variável | Descrição | Padrão |
-|----------|-----------|--------|
-| `DATABASE_URL` | URL PostgreSQL | - |
-| `AWS_ENDPOINT_URL` | Endpoint AWS/LocalStack | - |
-| `SES_FROM_EMAIL` | Email remetente | noreply@videoprocessor.local |
-| `SQS_NOTIFICATION_QUEUE_URL` | URL da fila | - |
-
----
-
-## 🧪 Testes
-
-```bash
-pytest tests/ -v --cov=notification_service
-```
-
----
-
-## 📄 Licença
-
-MIT License
