@@ -1,6 +1,8 @@
 # fiap-soat-video-notifications
 
 ## Introdução
+> Este repositório faz parte do projeto [FIAP SOAT Video Processor](https://github.com/SOAT-264/fiap-soat-video-local-dev).
+
 Microserviço de notificações do ecossistema FIAP SOAT Video Processor. Ele disponibiliza API para consulta de notificações e worker para consumir eventos de job e enviar e-mails.
 
 ## Sumário
